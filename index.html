@@ -5,7 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ordem de Produção</title>
   <style>
-    body { font-family: Arial, sans-serif; background:#f4f4f4; margin:0; }
+    body { font-family: Arial, sans-serif; background:#f4f4f4; margin:0; position:relative; }
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('logo.png') no-repeat center center;
+  background-size: 400px;
+  opacity: 0.06;
+  background-size: cover;
+  opacity: 0.08;
+  z-index: -1;
+}
     header { background:#111; color:#fff; padding:20px; text-align:center; font-size:24px; font-weight:bold; }
     .container { max-width:1000px; margin:auto; padding:20px; }
     .card { background:#fff; padding:20px; border-radius:10px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
@@ -28,6 +43,10 @@
   <div class="card">
     <h2>Informações do Projeto</h2>
     <div class="grid">
+      <div>
+        <label>N° de Produção</label>
+        <input type="number" id="numeroProducao" oninput="save()">
+      </div>
       <div>
         <label>Nome do Projeto</label>
         <input id="projeto" oninput="save()">
@@ -60,12 +79,27 @@
   </div>
 
   <div class="card">
+    <h2>Localização e Contato</h2>
+
+    <label>Endereço (Google Maps)</label>
+    <input id="endereco" placeholder="Digite o endereço" oninput="updateLinks(); save()">
+    <button onclick="abrirMapa()">📍 Abrir no Maps</button>
+
+    <label style="margin-top:15px; display:block;">Telefone (WhatsApp)</label>
+    <input id="telefone" placeholder="Ex: 5547999999999" oninput="updateLinks(); save()">
+    <button onclick="abrirWhats()">💬 Abrir WhatsApp</button>
+  </div>
+
+  <div class="card">
     <h2>Observações</h2>
     <textarea id="obs" oninput="save()"></textarea>
   </div>
 
   <div class="card">
     <button onclick="window.print()">🖨️ Exportar / Imprimir</button>
+    <div class="card">
+    <button onclick="gerarLink()">🔗 Gerar link somente leitura</button>
+    <input id="linkCompartilhamento" readonly style="margin-top:10px;">
   </div>
 
 </div>
@@ -105,7 +139,22 @@ function addEquip(text='') {
 }
 
 function save(){
+  // impedir número de produção duplicado
+  const numeroAtual = numeroProducao.value;
+  const saved = JSON.parse(localStorage.getItem('op_list') || '[]');
+
+  if(numeroAtual){
+    const duplicado = saved.find(item => item.numeroProducao === numeroAtual);
+    if(duplicado){
+      alert('⚠️ Este número de produção já existe!');
+      numeroProducao.value = '';
+      return;
+    }
+  }
   const data={
+    endereco:endereco.value,
+    telefone:telefone.value,
+    numeroProducao: numeroProducao.value,
     projeto:projeto.value,
     cliente:cliente.value,
     data:dataInput.value,
@@ -118,20 +167,101 @@ function save(){
     equipamentos:[...document.querySelectorAll('#equipamentos input')].map(i=>i.value)
   };
   localStorage.setItem('op',JSON.stringify(data));
+
+  // salvar lista de números usados
+  if(data.numeroProducao){
+    const lista = JSON.parse(localStorage.getItem('op_list') || '[]');
+    if(!lista.find(i => i.numeroProducao === data.numeroProducao)){
+      lista.push({ numeroProducao: data.numeroProducao });
+      localStorage.setItem('op_list', JSON.stringify(lista));
+    }
+  }
+}
+
+function abrirMapa(){
+  const endereco = document.getElementById('endereco').value;
+  if(endereco){
+    const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(endereco);
+    window.open(url, '_blank');
+  }
+}
+
+function abrirWhats(){
+  const tel = document.getElementById('telefone').value;
+  if(tel){
+    const url = 'https://wa.me/' + tel;
+    window.open(url, '_blank');
+  }
+}
+
+function updateLinks(){}
+
+function gerarLink(){
+  const data = localStorage.getItem('op');
+  if(!data) return alert('Nada para compartilhar ainda!');
+
+  const encoded = btoa(unescape(encodeURIComponent(data)));
+  const url = window.location.origin + window.location.pathname + '?view=' + encoded;
+
+  const input = document.getElementById('linkCompartilhamento');
+  input.value = url;
+  input.select();
+}
+
+function aplicarModoLeitura(dados){
+  document.querySelectorAll('input, textarea, button').forEach(el => {
+    el.disabled = true;
+  });
+
+  // mantém apenas leitura
+  document.querySelectorAll('input, textarea').forEach(el => el.disabled = true);
 }
 
 function load(){
+  const params = new URLSearchParams(window.location.search);
+  const view = params.get('view');
+
+  if(view){
+    const decoded = JSON.parse(decodeURIComponent(escape(atob(view))));
+    aplicarModoLeitura(decoded);
+    preencherDados(decoded);
+    return;
+  }
+
   const d=JSON.parse(localStorage.getItem('op')||'{}');
+  numeroProducao.value=d.numeroProducao||'';
+  preencherDados(d);
+  cliente.value=d.cliente||'';
+  dataInput.value=d.data||'';
+  responsavel.value=d.responsavel||'';
+  obs.value=d.obs||'';
+  endereco.value=d.endereco||'';
+  telefone.value=d.telefone||'';
+
+  
+  
+}
+
+function preencherDados(d){
+  numeroProducao.value=d.numeroProducao||'';
   projeto.value=d.projeto||'';
   cliente.value=d.cliente||'';
   dataInput.value=d.data||'';
   responsavel.value=d.responsavel||'';
   obs.value=d.obs||'';
+  endereco.value=d.endereco||'';
+  telefone.value=d.telefone||'';
+
+  document.getElementById('checklist').innerHTML='';
+  document.getElementById('equipamentos').innerHTML='';
 
   (d.checklist||[]).forEach(i=>addItem(i.text,i.checked));
   (d.equipamentos||[]).forEach(e=>addEquip(e));
 }
 
+const numeroProducao=document.getElementById('numeroProducao');
+const endereco=document.getElementById('endereco');
+const telefone=document.getElementById('telefone');
 const projeto=document.getElementById('projeto');
 const cliente=document.getElementById('cliente');
 const dataInput=document.getElementById('data');
