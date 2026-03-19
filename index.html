@@ -71,22 +71,38 @@
 </div>
 
 <script>
-function addItem(text='', checked=false) {
-  const div = document.createElement('div');
-  div.className='checklist-item';
+function addItem(text = '', checked = false) {
+  const checklist = document.getElementById('checklist');
 
-  const cb = document.createElement('input');
-  cb.type='checkbox'; cb.checked=checked; cb.onchange=save;
+  const div = document.createElement('div');
+  div.className = 'checklist-item';
+
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.checked = checked;
+  checkbox.onclick = save;
 
   const input = document.createElement('input');
-  input.type='text'; input.value=text; input.oninput=save;
+  input.type = 'text';
+  input.placeholder = 'Descrição do item';
+  input.value = text;
+  input.style.flex = '1';
+  input.style.marginLeft = '10px';
+  input.oninput = save;
 
-  const btn = document.createElement('button');
-  btn.textContent='X'; btn.className='remove-btn';
-  btn.onclick=()=>{ div.remove(); save(); };
+  const removeBtn = document.createElement('button');
+  removeBtn.textContent = 'X';
+  removeBtn.style.marginLeft = '10px';
+  removeBtn.onclick = () => {
+    div.remove();
+    save();
+  };
 
-  div.append(cb,input,btn);
-  document.getElementById('checklist').appendChild(div);
+  div.appendChild(checkbox);
+  div.appendChild(input);
+  div.appendChild(removeBtn);
+
+  checklist.appendChild(div);
 }
 
 function addEquip(text='') {
