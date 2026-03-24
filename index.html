@@ -1,272 +1,268 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ordem de Produção</title>
-  <style>
-    body { font-family: Arial, sans-serif; background:#f4f4f4; margin:0; position:relative; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ordem de Produção</title>
 
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: url('logo.png') no-repeat center center;
-  background-size: 400px;
-  opacity: 0.06;
-  background-size: cover;
-  opacity: 0.08;
-  z-index: -1;
+<style>
+body { font-family: Arial; background:#f4f4f4; margin:0; }
+
+header { background:#111; color:#fff; padding:15px; text-align:center; }
+
+.container { max-width:1000px; margin:auto; padding:15px; }
+
+.card { background:#fff; padding:15px; border-radius:10px; margin-bottom:10px; }
+
+input, textarea, select {
+  width:100%;
+  padding:10px;
+  margin-top:5px;
+  border-radius:6px;
+  border:1px solid #ccc;
 }
-    header { background:#111; color:#fff; padding:20px; text-align:center; font-size:24px; font-weight:bold; }
-    .container { max-width:1000px; margin:auto; padding:20px; }
-    .card { background:#fff; padding:20px; border-radius:10px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
-    h2 { margin-top:0; }
-    input, textarea { width:100%; padding:8px; margin-top:5px; border-radius:5px; border:1px solid #ccc; }
-    textarea { resize:vertical; }
-    .grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
-    .checklist-item { display:flex; align-items:center; margin-top:10px; gap:10px; width:100%; }
-    .checklist-item input[type="text"] { flex:1; min-width:200px; padding:8px; border:1px solid #ccc; border-radius:5px; background:#fff; }
-    button { margin-top:10px; padding:8px 12px; border:none; border-radius:5px; background:#007bff; color:#fff; cursor:pointer; }
-    .remove-btn { background:red; margin-left:10px; }
-  </style>
+
+button {
+  margin-top:10px;
+  padding:10px;
+  border:none;
+  border-radius:6px;
+  background:#007bff;
+  color:#fff;
+  cursor:pointer;
+  width:100%;
+}
+
+.acao { width:100%; }
+
+.checklist-item { display:flex; gap:10px; margin-top:10px; }
+
+@media(min-width:768px){
+  button { width:auto; }
+}
+
+/* Impressão */
+@media print{
+  body { background:#fff; }
+  button { display:none !important; }
+  .card { margin-bottom:5px; padding:10px; }
+}
+</style>
 </head>
+
 <body>
 
-<header>Ordem de Produção 3/8 Filmes</header>
+<header>Ordem de Produção</header>
 
 <div class="container">
 
-  <div class="card">
-    <h2>Informações do Projeto</h2>
-    <div class="grid">
-      <div>
-        <label>N° de Produção</label>
-        <input type="number" id="numeroProducao" oninput="save()">
-      </div>
-      <div>
-        <label>Nome do Projeto</label>
-        <input id="projeto" oninput="save()">
-      </div>
-      <div>
-        <label>Cliente</label>
-        <input id="cliente" oninput="save()">
-      </div>
-      <div>
-        <label>Data</label>
-        <input type="date" id="data" oninput="save()">
-      </div>
-      <div>
-        <label>Responsável</label>
-        <input id="responsavel" oninput="save()">
-      </div>
-    </div>
-  </div>
+<div class="card">
+<h2>Informações</h2>
+<input id="numeroProducao" placeholder="N° Produção" oninput="save()">
+<input id="projeto" placeholder="Projeto" oninput="save()">
+<input id="cliente" placeholder="Cliente" oninput="save()">
+<input type="date" id="data" oninput="save()">
+<input id="responsavel" placeholder="Responsável" oninput="save()">
+</div>
 
-  <div class="card">
-    <h2>Checklist - Filmagem</h2>
-    <div id="checklist"></div>
-    <button onclick="addItem()">Adicionar Item</button>
-  </div>
+<div class="card">
+<h2>Quantidade de Vídeos</h2>
+<select id="quantVideos" onchange="save()">
+<option value="">Selecione</option>
+<script>
+for(let i=1;i<=20;i++){
+document.write(`<option>${i}</option>`);
+}
+</script>
+</select>
+</div>
 
-  <div class="card">
-    <h2>Equipamentos</h2>
-    <div id="equipamentos"></div>
-    <button onclick="addEquip()">Adicionar Equipamento</button>
-  </div>
+<div class="card">
+<h2>Duração</h2>
+<select id="duracaoSelect" multiple onchange="save()" size="3">
+<option>05s</option>
+<option>15s</option>
+<option>30s</option>
+<option>45s</option>
+<option>60s</option>
+<option>1:30min</option>
+<option>2 min</option>
+<option>Tempo indeterminado</option>
+</select>
+</div>
 
-  <div class="card">
-    <h2>Localização e Contato</h2>
+<div class="card">
+<h2>Formato</h2>
+<label><input type="checkbox" value="vertical" onchange="save()"> Vertical</label><br>
+<label><input type="checkbox" value="horizontal" onchange="save()"> Horizontal</label>
+</div>
 
-    <label>Endereço (Google Maps)</label>
-    <input id="endereco" placeholder="Digite o endereço" oninput="updateLinks(); save()">
-    <button onclick="abrirMapa()">📍 Abrir no Maps</button>
+<div class="card">
+<h2>Briefing</h2>
+<textarea id="briefing" oninput="save()"></textarea>
+</div>
 
-    <label style="margin-top:15px; display:block;">Telefone (WhatsApp)</label>
-    <input id="telefone" placeholder="Ex: 5547999999999" oninput="updateLinks(); save()">
-    <button onclick="abrirWhats()">💬 Abrir WhatsApp</button>
-  </div>
+<div class="card">
+<h2>Equipamentos</h2>
+<div id="equipamentos"></div>
+<button onclick="addEquip()">Adicionar</button>
+</div>
 
-  <div class="card">
-    <h2>Observações</h2>
-    <textarea id="obs" oninput="save()"></textarea>
-  </div>
+<div class="card">
+<h2>Observações</h2>
+<textarea id="observacoes" oninput="save()"></textarea>
+</div>
 
-  <div class="card">
-    <button onclick="window.print()">🖨️ Exportar / Imprimir</button>
-    <div class="card">
-    <button onclick="gerarLink()">🔗 Gerar link somente leitura</button>
-    <input id="linkCompartilhamento" readonly style="margin-top:10px;">
-  </div>
+<div class="card">
+<h2>Localização e Contato</h2>
+
+<label>Endereço</label>
+<input id="endereco" oninput="save()">
+
+<button class="acao" onclick="abrirMapa()">📍 Abrir no Maps</button>
+
+<label style="margin-top:10px;">Telefone</label>
+<input id="telefone" oninput="save()">
+
+<button class="acao" onclick="abrirWhats()">💬 Abrir WhatsApp</button>
+
+</div>
+
+<div class="card">
+<button onclick="window.print()">🖨️ Imprimir</button>
+<button onclick="gerarLink()">🔗 Gerar e copiar link</button>
+<input id="link" readonly>
+</div>
 
 </div>
 
 <script>
-function addItem(text='', checked=false) {
-  const div = document.createElement('div');
-  div.className='checklist-item';
+const endereco = document.getElementById('endereco');
+const telefone = document.getElementById('telefone');
+const link = document.getElementById('link');
 
-  const cb = document.createElement('input');
-  cb.type='checkbox'; cb.checked=checked; cb.onchange=save;
-
-  const input = document.createElement('input');
-  input.type='text'; input.value=text; input.oninput=save;
-
-  const btn = document.createElement('button');
-  btn.textContent='X'; btn.className='remove-btn';
-  btn.onclick=()=>{ div.remove(); save(); };
-
-  div.append(cb,input,btn);
-  document.getElementById('checklist').appendChild(div);
-}
-
-function addEquip(text='') {
+function addEquip(text=''){
   const div = document.createElement('div');
   div.className='checklist-item';
 
   const input = document.createElement('input');
-  input.type='text'; input.value=text; input.oninput=save;
+  input.value=text;
+  input.oninput=save;
 
   const btn = document.createElement('button');
-  btn.textContent='X'; btn.className='remove-btn';
-  btn.onclick=()=>{ div.remove(); save(); };
+  btn.textContent='X';
+  btn.onclick=()=>{div.remove(); save();};
 
   div.append(input,btn);
-  document.getElementById('equipamentos').appendChild(div);
-}
-
-function save(){
-  // impedir número de produção duplicado
-  const numeroAtual = numeroProducao.value;
-  const saved = JSON.parse(localStorage.getItem('op_list') || '[]');
-
-  if(numeroAtual){
-    const duplicado = saved.find(item => item.numeroProducao === numeroAtual);
-    if(duplicado){
-      alert('⚠️ Este número de produção já existe!');
-      numeroProducao.value = '';
-      return;
-    }
-  }
-  const data={
-    endereco:endereco.value,
-    telefone:telefone.value,
-    numeroProducao: numeroProducao.value,
-    projeto:projeto.value,
-    cliente:cliente.value,
-    data:dataInput.value,
-    responsavel:responsavel.value,
-    obs:obs.value,
-    checklist:[...document.querySelectorAll('#checklist .checklist-item')].map(i=>({
-      text:i.children[1].value,
-      checked:i.children[0].checked
-    })),
-    equipamentos:[...document.querySelectorAll('#equipamentos input')].map(i=>i.value)
-  };
-  localStorage.setItem('op',JSON.stringify(data));
-
-  // salvar lista de números usados
-  if(data.numeroProducao){
-    const lista = JSON.parse(localStorage.getItem('op_list') || '[]');
-    if(!lista.find(i => i.numeroProducao === data.numeroProducao)){
-      lista.push({ numeroProducao: data.numeroProducao });
-      localStorage.setItem('op_list', JSON.stringify(lista));
-    }
-  }
+  equipamentos.appendChild(div);
 }
 
 function abrirMapa(){
-  const endereco = document.getElementById('endereco').value;
-  if(endereco){
-    const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(endereco);
-    window.open(url, '_blank');
+  if(endereco.value){
+    window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(endereco.value));
   }
 }
 
 function abrirWhats(){
-  const tel = document.getElementById('telefone').value;
-  if(tel){
-    const url = 'https://wa.me/' + tel;
-    window.open(url, '_blank');
+  if(telefone.value){
+    window.open('https://wa.me/' + telefone.value);
   }
 }
 
-function updateLinks(){}
+function save(){
+  const data={
+    numeroProducao:numeroProducao.value,
+    projeto:projeto.value,
+    cliente:cliente.value,
+    data:data.value,
+    responsavel:responsavel.value,
+    endereco:endereco.value,
+    telefone:telefone.value,
+    briefing:briefing.value,
+    observacoes:observacoes.value,
+    quantVideos:quantVideos.value,
+    duracao:[...duracaoSelect.selectedOptions].map(o=>o.value),
+    formato:[...document.querySelectorAll('input[type=checkbox]:checked')].map(i=>i.value),
+    equipamentos:[...document.querySelectorAll('#equipamentos input')].map(i=>i.value)
+  };
+  localStorage.setItem('op',JSON.stringify(data));
+}
 
 function gerarLink(){
   const data = localStorage.getItem('op');
-  if(!data) return alert('Nada para compartilhar ainda!');
+  if(!data) return alert('Nada para compartilhar!');
 
   const encoded = btoa(unescape(encodeURIComponent(data)));
-  const url = window.location.origin + window.location.pathname + '?view=' + encoded;
+  const url = location.origin + location.pathname + '?view=' + encoded;
 
-  const input = document.getElementById('linkCompartilhamento');
-  input.value = url;
-  input.select();
+  link.value = url;
+
+  navigator.clipboard.writeText(url).then(() => {
+    mostrarAviso('🔗 Link copiado!');
+  }).catch(() => {
+    link.select();
+    document.execCommand('copy');
+    mostrarAviso('🔗 Link copiado!');
+  });
 }
 
-function aplicarModoLeitura(dados){
-  document.querySelectorAll('input, textarea, button').forEach(el => {
-    el.disabled = true;
-  });
+function mostrarAviso(msg){
+  const aviso = document.createElement('div');
+  aviso.textContent = msg;
+  aviso.style.position = 'fixed';
+  aviso.style.bottom = '20px';
+  aviso.style.left = '50%';
+  aviso.style.transform = 'translateX(-50%)';
+  aviso.style.background = '#333';
+  aviso.style.color = '#fff';
+  aviso.style.padding = '10px 20px';
+  aviso.style.borderRadius = '5px';
 
-  // mantém apenas leitura
-  document.querySelectorAll('input, textarea').forEach(el => el.disabled = true);
+  document.body.appendChild(aviso);
+  setTimeout(()=>aviso.remove(),2000);
+}
+
+function aplicarModoLeitura(){
+  document.querySelectorAll('input, textarea, select').forEach(el=>el.disabled=true);
+
+  document.querySelectorAll('#equipamentos input').forEach(el=>el.disabled=false);
+
+  document.querySelectorAll('button:not(.acao)').forEach(b=>b.style.display='none');
 }
 
 function load(){
-  const params = new URLSearchParams(window.location.search);
-  const view = params.get('view');
+  const params=new URLSearchParams(location.search);
+  const view=params.get('view');
 
   if(view){
-    const decoded = JSON.parse(decodeURIComponent(escape(atob(view))));
-    aplicarModoLeitura(decoded);
-    preencherDados(decoded);
+    const d=JSON.parse(decodeURIComponent(escape(atob(view))));
+    preencher(d);
+    aplicarModoLeitura();
     return;
   }
 
   const d=JSON.parse(localStorage.getItem('op')||'{}');
-  numeroProducao.value=d.numeroProducao||'';
-  preencherDados(d);
-  cliente.value=d.cliente||'';
-  dataInput.value=d.data||'';
-  responsavel.value=d.responsavel||'';
-  obs.value=d.obs||'';
-  endereco.value=d.endereco||'';
-  telefone.value=d.telefone||'';
-
-  
-  
+  preencher(d);
 }
 
-function preencherDados(d){
+function preencher(d){
   numeroProducao.value=d.numeroProducao||'';
   projeto.value=d.projeto||'';
   cliente.value=d.cliente||'';
-  dataInput.value=d.data||'';
+  data.value=d.data||'';
   responsavel.value=d.responsavel||'';
-  obs.value=d.obs||'';
   endereco.value=d.endereco||'';
   telefone.value=d.telefone||'';
+  briefing.value=d.briefing||'';
+  observacoes.value=d.observacoes||'';
+  quantVideos.value=d.quantVideos||'';
 
-  document.getElementById('checklist').innerHTML='';
-  document.getElementById('equipamentos').innerHTML='';
+  [...duracaoSelect.options].forEach(o=>{
+    o.selected=d.duracao?.includes(o.value);
+  });
 
-  (d.checklist||[]).forEach(i=>addItem(i.text,i.checked));
-  (d.equipamentos||[]).forEach(e=>addEquip(e));
+  (d.equipamentos||[]).forEach(addEquip);
 }
-
-const numeroProducao=document.getElementById('numeroProducao');
-const endereco=document.getElementById('endereco');
-const telefone=document.getElementById('telefone');
-const projeto=document.getElementById('projeto');
-const cliente=document.getElementById('cliente');
-const dataInput=document.getElementById('data');
-const responsavel=document.getElementById('responsavel');
-const obs=document.getElementById('obs');
 
 load();
 </script>
