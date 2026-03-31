@@ -50,7 +50,6 @@ button {
 input[readonly] {
   background:#eee;
   cursor:not-allowed;
-  opacity:0.8;
 }
 
 .checklist-item button {
@@ -114,7 +113,7 @@ document.write(`<option>${i}</option>`);
 
 <div class="card">
 <h2>Duração</h2>
-<input id="duracaoResumo" placeholder="Clique para selecionar" readonly onclick="toggleDuracao()">
+<input id="duracaoResumo" readonly onclick="toggleDuracao()">
 
 <div id="duracaoBox" style="display:none;">
 <div class="duracao-item" data-value="05s" onclick="toggleItem(this,event)">05s</div>
@@ -188,7 +187,8 @@ const listaPadrao = [
 ];
 
 function toggleDuracao(){
-  duracaoBox.style.display = duracaoBox.style.display==='none'?'block':'none';
+  const box = document.getElementById('duracaoBox');
+  box.style.display = box.style.display==='none'?'block':'none';
 }
 
 function toggleItem(el,e){
@@ -203,15 +203,18 @@ function toggleItem(el,e){
     el.classList.add('selected');
   }
 
-  duracaoResumo.value = duracoesSelecionadas.join(', ');
+  document.getElementById('duracaoResumo').value = duracoesSelecionadas.join(', ');
   save();
 }
 
 document.addEventListener('click', function(e){
-  if(duracaoBox.style.display==='block' &&
-     !duracaoBox.contains(e.target) &&
-     !duracaoResumo.contains(e.target)){
-    duracaoBox.style.display='none';
+  const box = document.getElementById('duracaoBox');
+  const input = document.getElementById('duracaoResumo');
+
+  if(box.style.display==='block' &&
+     !box.contains(e.target) &&
+     !input.contains(e.target)){
+    box.style.display='none';
     save();
   }
 });
@@ -226,6 +229,7 @@ function addEquip(text='', check=false, fixo=false){
   c.onchange=save;
 
   const input = document.createElement('input');
+  input.type='text';
   input.value=text;
   input.oninput=save;
 
@@ -238,7 +242,7 @@ function addEquip(text='', check=false, fixo=false){
   if(fixo) btn.style.display='none';
 
   div.append(c,input,btn);
-  equipamentos.appendChild(div);
+  document.getElementById('equipamentos').appendChild(div);
 }
 
 function selecionarTodos(){
@@ -249,54 +253,69 @@ function selecionarTodos(){
 }
 
 function abrirMapa(){
-  if(endereco.value){
-    window.open('https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(endereco.value));
+  const endereco = document.getElementById('endereco').value;
+  if(endereco){
+    window.open('https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(endereco));
   }
 }
 
 function abrirWhats(){
-  let t = telefone.value.replace(/\D/g,'');
+  let t = document.getElementById('telefone').value.replace(/\D/g,'');
   if(t){
     window.open('https://wa.me/'+t);
   }
 }
 
+/* ✅ SAVE CORRIGIDO */
 function save(){
   const dados = {
-    numeroProducao: numeroProducao.value,
-    projeto: projeto.value,
-    cliente: cliente.value,
-    data: data.value,
-    responsavel: responsavel.value,
-    quantVideos: quantVideos.value,
+    numeroProducao: document.getElementById('numeroProducao')?.value || '',
+    projeto: document.getElementById('projeto')?.value || '',
+    cliente: document.getElementById('cliente')?.value || '',
+    data: document.getElementById('data')?.value || '',
+    responsavel: document.getElementById('responsavel')?.value || '',
+    quantVideos: document.getElementById('quantVideos')?.value || '',
+    briefing: document.getElementById('briefing')?.value || '',
+    observacoes: document.getElementById('observacoes')?.value || '',
+    endereco: document.getElementById('endereco')?.value || '',
+    telefone: document.getElementById('telefone')?.value || '',
     duracao: duracoesSelecionadas,
-    formato: [...document.querySelectorAll('input[type=checkbox]:checked')].map(i=>i.value),
-    briefing: briefing.value,
-    observacoes: observacoes.value,
-    endereco: endereco.value,
-    telefone: telefone.value,
-    equipamentos: [...document.querySelectorAll('#equipamentos .checklist-item')].map(i=>({
-      nome: i.querySelector('input[type=text]').value,
-      check: i.querySelector('input[type=checkbox]').checked
-    }))
+
+    formato: [...document.querySelectorAll('input[type=checkbox]:checked')]
+      .map(i => i.value),
+
+    equipamentos: [...document.querySelectorAll('#equipamentos .checklist-item')]
+      .map(item => {
+        const inputText = item.querySelector('input[type=text]');
+        const checkbox = item.querySelector('input[type=checkbox]');
+
+        return {
+          nome: inputText ? inputText.value : '',
+          check: checkbox ? checkbox.checked : false
+        };
+      })
   };
 
   localStorage.setItem('op', JSON.stringify(dados));
 }
 
-/* 🔥 CORRIGIDO */
+/* LINK */
 function gerarLink(){
   save();
 
   const data = localStorage.getItem('op');
-  if(!data) return alert('Preencha algo primeiro');
+  if(!data){
+    alert('Preencha algo primeiro');
+    return;
+  }
 
   const encoded = btoa(encodeURIComponent(data));
   const url = location.origin + location.pathname + '?view=' + encoded;
 
-  link.value = url;
+  const input = document.getElementById('link');
+  input.value = url;
 
-  if (navigator.clipboard && window.isSecureContext) {
+  if (navigator.clipboard) {
     navigator.clipboard.writeText(url)
       .then(() => mostrarAviso('🔗 Link copiado!'))
       .catch(() => fallbackCopy(url));
@@ -347,21 +366,22 @@ function load(){
 }
 
 function preencher(d){
-  numeroProducao.value=d.numeroProducao||'';
-  projeto.value=d.projeto||'';
-  cliente.value=d.cliente||'';
-  data.value=d.data||'';
-  responsavel.value=d.responsavel||'';
-  quantVideos.value=d.quantVideos||'';
-  briefing.value=d.briefing||'';
-  observacoes.value=d.observacoes||'';
-  endereco.value=d.endereco||'';
-  telefone.value=d.telefone||'';
+  document.getElementById('numeroProducao').value=d.numeroProducao||'';
+  document.getElementById('projeto').value=d.projeto||'';
+  document.getElementById('cliente').value=d.cliente||'';
+  document.getElementById('data').value=d.data||'';
+  document.getElementById('responsavel').value=d.responsavel||'';
+  document.getElementById('quantVideos').value=d.quantVideos||'';
+  document.getElementById('briefing').value=d.briefing||'';
+  document.getElementById('observacoes').value=d.observacoes||'';
+  document.getElementById('endereco').value=d.endereco||'';
+  document.getElementById('telefone').value=d.telefone||'';
 
   duracoesSelecionadas=d.duracao||[];
-  duracaoResumo.value=duracoesSelecionadas.join(', ');
+  document.getElementById('duracaoResumo').value=duracoesSelecionadas.join(', ');
 
-  equipamentos.innerHTML='';
+  document.getElementById('equipamentos').innerHTML='';
+
   (d.equipamentos||[]).forEach(eq=>{
     const fixo = listaPadrao.includes(eq.nome);
     addEquip(eq.nome, eq.check, fixo);
