@@ -27,12 +27,42 @@ button {
   background:#007bff;
   color:#fff;
   cursor:pointer;
-  width:100%;
 }
 
 .acao { width:100%; }
-.checklist-item { display:flex; gap:10px; margin-top:10px; }
 
+/* EQUIPAMENTOS */
+#equipamentos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 20px;
+}
+
+.checklist-item {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:#f9f9f9;
+  padding:8px;
+  border-radius:6px;
+}
+
+input[readonly] {
+  background:#eee;
+  cursor:not-allowed;
+  opacity:0.8;
+}
+
+.checklist-item button {
+  width:35px;
+  padding:5px;
+}
+
+@media(max-width:600px){
+  #equipamentos { grid-template-columns: 1fr; }
+}
+
+/* DURAÇÃO */
 .duracao-item {
   padding:10px;
   margin-top:5px;
@@ -47,15 +77,10 @@ button {
   font-weight:bold;
 }
 
-#duracaoResumo { cursor:pointer; background:#fff; }
-
-@media(min-width:768px){
-  button { width:auto; }
-}
+#duracaoResumo { cursor:pointer; }
 
 @media print{
   button { display:none !important; }
-  .card { margin-bottom:5px; padding:10px; }
 }
 </style>
 </head>
@@ -90,15 +115,16 @@ document.write(`<option>${i}</option>`);
 <div class="card">
 <h2>Duração</h2>
 <input id="duracaoResumo" placeholder="Clique para selecionar" readonly onclick="toggleDuracao()">
-<div id="duracaoBox" style="display:none; margin-top:10px;">
-<div class="duracao-item" data-value="05s" onclick="toggleItem(this, event)">05s</div>
-<div class="duracao-item" data-value="15s" onclick="toggleItem(this, event)">15s</div>
-<div class="duracao-item" data-value="30s" onclick="toggleItem(this, event)">30s</div>
-<div class="duracao-item" data-value="45s" onclick="toggleItem(this, event)">45s</div>
-<div class="duracao-item" data-value="60s" onclick="toggleItem(this, event)">60s</div>
-<div class="duracao-item" data-value="1:30min" onclick="toggleItem(this, event)">1:30min</div>
-<div class="duracao-item" data-value="2 min" onclick="toggleItem(this, event)">2 min</div>
-<div class="duracao-item" data-value="indeterminado" onclick="toggleItem(this, event)">Tempo indeterminado</div>
+
+<div id="duracaoBox" style="display:none;">
+<div class="duracao-item" data-value="05s" onclick="toggleItem(this,event)">05s</div>
+<div class="duracao-item" data-value="15s" onclick="toggleItem(this,event)">15s</div>
+<div class="duracao-item" data-value="30s" onclick="toggleItem(this,event)">30s</div>
+<div class="duracao-item" data-value="45s" onclick="toggleItem(this,event)">45s</div>
+<div class="duracao-item" data-value="60s" onclick="toggleItem(this,event)">60s</div>
+<div class="duracao-item" data-value="1:30min" onclick="toggleItem(this,event)">1:30min</div>
+<div class="duracao-item" data-value="2 min" onclick="toggleItem(this,event)">2 min</div>
+<div class="duracao-item" data-value="indeterminado" onclick="toggleItem(this,event)">Tempo indeterminado</div>
 </div>
 </div>
 
@@ -117,6 +143,7 @@ document.write(`<option>${i}</option>`);
 <h2>Equipamentos</h2>
 <div id="equipamentos"></div>
 <button onclick="addEquip()">Adicionar</button>
+<button onclick="selecionarTodos()">✔ Selecionar todos</button>
 </div>
 
 <div class="card">
@@ -126,6 +153,7 @@ document.write(`<option>${i}</option>`);
 
 <div class="card">
 <h2>Localização e Contato</h2>
+
 <label>Endereço</label>
 <input id="endereco" oninput="save()">
 <button class="acao" onclick="abrirMapa()">📍 Abrir no Maps</button>
@@ -133,6 +161,7 @@ document.write(`<option>${i}</option>`);
 <label style="margin-top:10px;">Telefone</label>
 <input id="telefone" oninput="save()">
 <button class="acao" onclick="abrirWhats()">💬 Abrir WhatsApp</button>
+
 </div>
 
 <div class="card">
@@ -144,92 +173,125 @@ document.write(`<option>${i}</option>`);
 </div>
 
 <script>
+
 let duracoesSelecionadas = [];
 
+const listaPadrao = [
+"CAMERA + BATERIAS + CARTÃO DE MEMÓRIA",
+"DUMMY","CARREGADOR DE BATERIA","POWERBANK",
+"LENTE 17-70MM","LENTE 50MM","LENTE 28MM",
+"MICROFONE HOLLYLAND (MOEDA)","MICROFONE HOLLYLAND",
+"MICROFONE COMICA","GRAVADOR DE AUDIO ZOOM H5N",
+"LED PORTÁTIL","SOPRADOR POEIRA (FUC FUC)",
+"ILUMINAÇÃO COMPLETA","KIT TRIPÉS COMPLETO",
+"PROLONGAS","CASE CABOS"
+];
+
 function toggleDuracao(){
-  const box = document.getElementById('duracaoBox');
-  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  duracaoBox.style.display = duracaoBox.style.display==='none'?'block':'none';
 }
 
-function toggleItem(el, event){
-  event.stopPropagation();
-  const valor = el.dataset.value;
+function toggleItem(el,e){
+  e.stopPropagation();
+  const v = el.dataset.value;
 
-  if(duracoesSelecionadas.includes(valor)){
-    duracoesSelecionadas = duracoesSelecionadas.filter(v=>v!==valor);
+  if(duracoesSelecionadas.includes(v)){
+    duracoesSelecionadas = duracoesSelecionadas.filter(x=>x!==v);
     el.classList.remove('selected');
   } else {
-    duracoesSelecionadas.push(valor);
+    duracoesSelecionadas.push(v);
     el.classList.add('selected');
   }
 
-  atualizarDuracao();
+  duracaoResumo.value = duracoesSelecionadas.join(', ');
   save();
 }
 
-function atualizarDuracao(){
-  document.getElementById('duracaoResumo').value = duracoesSelecionadas.join(', ');
-}
+document.addEventListener('click', function(e){
+  if(duracaoBox.style.display==='block' &&
+     !duracaoBox.contains(e.target) &&
+     !duracaoResumo.contains(e.target)){
+    duracaoBox.style.display='none';
+    save();
+  }
+});
 
-function addEquip(text=''){
+function addEquip(text='', check=false, fixo=false){
   const div = document.createElement('div');
   div.className='checklist-item';
+
+  const c = document.createElement('input');
+  c.type='checkbox';
+  c.checked=check;
+  c.onchange=save;
 
   const input = document.createElement('input');
   input.value=text;
   input.oninput=save;
 
+  if(fixo) input.readOnly=true;
+
   const btn = document.createElement('button');
   btn.textContent='X';
   btn.onclick=()=>{div.remove(); save();};
 
-  div.append(input,btn);
+  if(fixo) btn.style.display='none';
+
+  div.append(c,input,btn);
   equipamentos.appendChild(div);
 }
 
+function selecionarTodos(){
+  const c = document.querySelectorAll('#equipamentos input[type=checkbox]');
+  const all = [...c].every(x=>x.checked);
+  c.forEach(x=>x.checked=!all);
+  save();
+}
+
 function abrirMapa(){
-  const endereco = document.getElementById('endereco').value;
-  if(endereco){
-    window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(endereco));
+  if(endereco.value){
+    window.open('https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(endereco.value));
   }
 }
 
 function abrirWhats(){
-  const tel = document.getElementById('telefone').value;
-  if(tel){
-    window.open('https://wa.me/' + tel);
+  let t = telefone.value.replace(/\D/g,'');
+  if(t){
+    window.open('https://wa.me/'+t);
   }
 }
 
-/* ✅ CORRIGIDO */
 function save(){
   const dados = {
-    numeroProducao: document.getElementById('numeroProducao').value,
-    projeto: document.getElementById('projeto').value,
-    cliente: document.getElementById('cliente').value,
-    data: document.getElementById('data').value,
-    responsavel: document.getElementById('responsavel').value,
-    endereco: document.getElementById('endereco').value,
-    telefone: document.getElementById('telefone').value,
-    briefing: document.getElementById('briefing').value,
-    observacoes: document.getElementById('observacoes').value,
-    quantVideos: document.getElementById('quantVideos').value,
+    numeroProducao: numeroProducao.value,
+    projeto: projeto.value,
+    cliente: cliente.value,
+    data: data.value,
+    responsavel: responsavel.value,
+    quantVideos: quantVideos.value,
     duracao: duracoesSelecionadas,
     formato: [...document.querySelectorAll('input[type=checkbox]:checked')].map(i=>i.value),
-    equipamentos: [...document.querySelectorAll('#equipamentos input')].map(i=>i.value)
+    briefing: briefing.value,
+    observacoes: observacoes.value,
+    endereco: endereco.value,
+    telefone: telefone.value,
+    equipamentos: [...document.querySelectorAll('#equipamentos .checklist-item')].map(i=>({
+      nome: i.querySelector('input[type=text]').value,
+      check: i.querySelector('input[type=checkbox]').checked
+    }))
   };
 
   localStorage.setItem('op', JSON.stringify(dados));
 }
 
-/* ✅ MELHORADO */
+/* 🔥 CORRIGIDO */
 function gerarLink(){
   save();
 
   const data = localStorage.getItem('op');
-  if(!data || data === '{}') return alert('Preencha pelo menos um campo!');
+  if(!data) return alert('Preencha algo primeiro');
 
-  const encoded = btoa(unescape(encodeURIComponent(data)));
+  const encoded = btoa(encodeURIComponent(data));
   const url = location.origin + location.pathname + '?view=' + encoded;
 
   link.value = url;
@@ -267,11 +329,21 @@ function mostrarAviso(msg){
   setTimeout(()=>aviso.remove(),2000);
 }
 
-load();
-
 function load(){
-  const d=JSON.parse(localStorage.getItem('op')||'{}');
+  const p = new URLSearchParams(location.search).get('view');
+  let d={};
+
+  if(p){
+    d = JSON.parse(decodeURIComponent(atob(p)));
+  } else {
+    d = JSON.parse(localStorage.getItem('op')||'{}');
+  }
+
   preencher(d);
+
+  if(!d.equipamentos || d.equipamentos.length===0){
+    listaPadrao.forEach(i=>addEquip(i,false,true));
+  }
 }
 
 function preencher(d){
@@ -280,17 +352,23 @@ function preencher(d){
   cliente.value=d.cliente||'';
   data.value=d.data||'';
   responsavel.value=d.responsavel||'';
-  endereco.value=d.endereco||'';
-  telefone.value=d.telefone||'';
+  quantVideos.value=d.quantVideos||'';
   briefing.value=d.briefing||'';
   observacoes.value=d.observacoes||'';
-  quantVideos.value=d.quantVideos||'';
+  endereco.value=d.endereco||'';
+  telefone.value=d.telefone||'';
 
-  duracoesSelecionadas = d.duracao || [];
-  atualizarDuracao();
+  duracoesSelecionadas=d.duracao||[];
+  duracaoResumo.value=duracoesSelecionadas.join(', ');
 
-  (d.equipamentos||[]).forEach(addEquip);
+  equipamentos.innerHTML='';
+  (d.equipamentos||[]).forEach(eq=>{
+    const fixo = listaPadrao.includes(eq.nome);
+    addEquip(eq.nome, eq.check, fixo);
+  });
 }
+
+load();
 </script>
 
 </body>
