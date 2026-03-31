@@ -7,11 +7,8 @@
 
 <style>
 body { font-family: Arial; background:#f4f4f4; margin:0; }
-
 header { background:#111; color:#fff; padding:15px; text-align:center; }
-
 .container { max-width:1000px; margin:auto; padding:15px; }
-
 .card { background:#fff; padding:15px; border-radius:10px; margin-bottom:10px; }
 
 input, textarea, select {
@@ -34,7 +31,6 @@ button {
 }
 
 .acao { width:100%; }
-
 .checklist-item { display:flex; gap:10px; margin-top:10px; }
 
 .duracao-item {
@@ -51,16 +47,12 @@ button {
   font-weight:bold;
 }
 
-#duracaoResumo {
-  cursor:pointer;
-  background:#fff;
-}
+#duracaoResumo { cursor:pointer; background:#fff; }
 
 @media(min-width:768px){
   button { width:auto; }
 }
 
-/* impressão */
 @media print{
   button { display:none !important; }
   .card { margin-bottom:5px; padding:10px; }
@@ -97,11 +89,8 @@ document.write(`<option>${i}</option>`);
 
 <div class="card">
 <h2>Duração</h2>
-
 <input id="duracaoResumo" placeholder="Clique para selecionar" readonly onclick="toggleDuracao()">
-
 <div id="duracaoBox" style="display:none; margin-top:10px;">
-
 <div class="duracao-item" data-value="05s" onclick="toggleItem(this, event)">05s</div>
 <div class="duracao-item" data-value="15s" onclick="toggleItem(this, event)">15s</div>
 <div class="duracao-item" data-value="30s" onclick="toggleItem(this, event)">30s</div>
@@ -110,9 +99,7 @@ document.write(`<option>${i}</option>`);
 <div class="duracao-item" data-value="1:30min" onclick="toggleItem(this, event)">1:30min</div>
 <div class="duracao-item" data-value="2 min" onclick="toggleItem(this, event)">2 min</div>
 <div class="duracao-item" data-value="indeterminado" onclick="toggleItem(this, event)">Tempo indeterminado</div>
-
 </div>
-
 </div>
 
 <div class="card">
@@ -139,17 +126,13 @@ document.write(`<option>${i}</option>`);
 
 <div class="card">
 <h2>Localização e Contato</h2>
-
 <label>Endereço</label>
 <input id="endereco" oninput="save()">
-
 <button class="acao" onclick="abrirMapa()">📍 Abrir no Maps</button>
 
 <label style="margin-top:10px;">Telefone</label>
 <input id="telefone" oninput="save()">
-
 <button class="acao" onclick="abrirWhats()">💬 Abrir WhatsApp</button>
-
 </div>
 
 <div class="card">
@@ -165,13 +148,11 @@ let duracoesSelecionadas = [];
 
 function toggleDuracao(){
   const box = document.getElementById('duracaoBox');
-  const isVisible = window.getComputedStyle(box).display !== 'none';
-  box.style.display = isVisible ? 'none' : 'block';
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
 }
 
 function toggleItem(el, event){
   event.stopPropagation();
-
   const valor = el.dataset.value;
 
   if(duracoesSelecionadas.includes(valor)){
@@ -187,8 +168,7 @@ function toggleItem(el, event){
 }
 
 function atualizarDuracao(){
-  const resumo = document.getElementById('duracaoResumo');
-  resumo.value = duracoesSelecionadas.join(', ');
+  document.getElementById('duracaoResumo').value = duracoesSelecionadas.join(', ');
 }
 
 function addEquip(text=''){
@@ -221,42 +201,55 @@ function abrirWhats(){
   }
 }
 
+/* ✅ CORRIGIDO */
 function save(){
-  const data={
-    numeroProducao:numeroProducao.value,
-    projeto:projeto.value,
-    cliente:cliente.value,
-    data:data.value,
-    responsavel:responsavel.value,
-    endereco:endereco.value,
-    telefone:telefone.value,
-    briefing:briefing.value,
-    observacoes:observacoes.value,
-    quantVideos:quantVideos.value,
+  const dados = {
+    numeroProducao: document.getElementById('numeroProducao').value,
+    projeto: document.getElementById('projeto').value,
+    cliente: document.getElementById('cliente').value,
+    data: document.getElementById('data').value,
+    responsavel: document.getElementById('responsavel').value,
+    endereco: document.getElementById('endereco').value,
+    telefone: document.getElementById('telefone').value,
+    briefing: document.getElementById('briefing').value,
+    observacoes: document.getElementById('observacoes').value,
+    quantVideos: document.getElementById('quantVideos').value,
     duracao: duracoesSelecionadas,
-    formato:[...document.querySelectorAll('input[type=checkbox]:checked')].map(i=>i.value),
-    equipamentos:[...document.querySelectorAll('#equipamentos input')].map(i=>i.value)
+    formato: [...document.querySelectorAll('input[type=checkbox]:checked')].map(i=>i.value),
+    equipamentos: [...document.querySelectorAll('#equipamentos input')].map(i=>i.value)
   };
 
-  localStorage.setItem('op',JSON.stringify(data));
+  localStorage.setItem('op', JSON.stringify(dados));
 }
 
+/* ✅ MELHORADO */
 function gerarLink(){
+  save();
+
   const data = localStorage.getItem('op');
-  if(!data) return alert('Nada para compartilhar!');
+  if(!data || data === '{}') return alert('Preencha pelo menos um campo!');
 
   const encoded = btoa(unescape(encodeURIComponent(data)));
   const url = location.origin + location.pathname + '?view=' + encoded;
 
   link.value = url;
 
-  navigator.clipboard.writeText(url).then(()=>{
-    mostrarAviso('🔗 Link copiado!');
-  }).catch(()=>{
-    link.select();
-    document.execCommand('copy');
-    mostrarAviso('🔗 Link copiado!');
-  });
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url)
+      .then(() => mostrarAviso('🔗 Link copiado!'))
+      .catch(() => fallbackCopy(url));
+  } else {
+    fallbackCopy(url);
+  }
+}
+
+function fallbackCopy(text) {
+  const input = document.getElementById('link');
+  input.removeAttribute('readonly');
+  input.select();
+  document.execCommand('copy');
+  input.setAttribute('readonly', true);
+  mostrarAviso('🔗 Link copiado!');
 }
 
 function mostrarAviso(msg){
@@ -274,39 +267,12 @@ function mostrarAviso(msg){
   setTimeout(()=>aviso.remove(),2000);
 }
 
-function aplicarModoLeitura(){
-  document.querySelectorAll('input, textarea, select').forEach(el=>el.disabled=true);
-  document.querySelectorAll('#equipamentos input').forEach(el=>el.disabled=false);
-  document.querySelectorAll('button:not(.acao)').forEach(b=>b.style.display='none');
-}
+load();
 
 function load(){
-  const params=new URLSearchParams(location.search);
-  const view=params.get('view');
-
-  if(view){
-    const d=JSON.parse(decodeURIComponent(escape(atob(view))));
-    preencher(d);
-    aplicarModoLeitura();
-    return;
-  }
-
   const d=JSON.parse(localStorage.getItem('op')||'{}');
   preencher(d);
 }
-
-// 🔥 FECHAR AO CLICAR FORA
-document.addEventListener('click', function(e){
-  const box = document.getElementById('duracaoBox');
-  const input = document.getElementById('duracaoResumo');
-
-  const clicouDentro =
-    box.contains(e.target) || input.contains(e.target);
-
-  if(!clicouDentro){
-    box.style.display = 'none';
-  }
-});
 
 function preencher(d){
   numeroProducao.value=d.numeroProducao||'';
@@ -321,20 +287,10 @@ function preencher(d){
   quantVideos.value=d.quantVideos||'';
 
   duracoesSelecionadas = d.duracao || [];
-
-  document.querySelectorAll('.duracao-item').forEach(el=>{
-    const valor = el.dataset.value;
-    if(duracoesSelecionadas.includes(valor)){
-      el.classList.add('selected');
-    }
-  });
-
   atualizarDuracao();
 
   (d.equipamentos||[]).forEach(addEquip);
 }
-
-load();
 </script>
 
 </body>
